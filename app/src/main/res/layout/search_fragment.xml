@@ -11,20 +11,11 @@
         >
     </include>
 
-    <SearchView
-        android:id="@+id/searchSong"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_below="@+id/find_friends_toolbar"
-        android:padding="10dp"
-        android:layout_margin="5dp"
-        android:queryHint="Search"/>
-
-    <androidx.recyclerview.widget.RecyclerView
+    <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/mySongList"
-        android:layout_below="@+id/searchSong"
+        android:layout_below="@+id/find_friends_toolbar"
         android:choiceMode="singleChoice"
         android:layout_centerHorizontal="true"
         android:layout_above="@+id/jcplayer"

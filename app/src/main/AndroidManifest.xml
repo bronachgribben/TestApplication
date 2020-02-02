@@ -15,7 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".AddContactsActivity"></activity>
+        <activity android:name=".AddSong"></activity>
+        <activity android:name=".ParticipantAddActivity" />
+        <activity android:name=".AddContactsActivity" />
         <activity android:name=".ProfileActivity" />
         <activity
             android:name=".FindFriendsActivity"

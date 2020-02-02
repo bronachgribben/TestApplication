@@ -1,147 +1,119 @@
 package com.example.testapplication;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CalendarView;
-import android.widget.EditText;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ScrollView;
+import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.jean.jcplayer.model.JcAudio;
+import com.example.jean.jcplayer.view.JcPlayerView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.ArrayList;
 
-public class GroupPlaylistActivity extends AppCompatActivity
-{
+import static com.example.testapplication.R.raw.song1;
+
+
+public class GroupPlaylistActivity extends AppCompatActivity {
+
+    private FirebaseAuth firebaseAuth;
+    private FirebaseDatabase database;
+    DatabaseReference ref;
+
+
+    private String groupId, myGroupRole;
     private Toolbar mToolbar;
-    private ImageButton SendMessageButton;
-    private EditText UserMessageInput;
-    private ScrollView mScrollView;
-    private TextView displayTextMessages;
-    private FirebaseAuth mAuth;
-    private DatabaseReference UserRef, GroupNameRef, GroupMessageKeyRef;
+    private TextView groupTitle;
+    private ImageButton addSong;
+    private ListView listView;
 
-    private String currentGroupName, currentUserID, currentUserName, currentDate, currentTime;
-    
+    ArrayList<String> arrayListSongsName = new ArrayList<>();
+    ArrayList<String> arrayListSongsUrl = new ArrayList<>();
+    ArrayAdapter<String> arrayAdapter;
+
+    Music music;
+    ArrayList<String> list;
+    ArrayAdapter<String> adapter;
+
+    JcPlayerView jcPlayerView;
+    ArrayList<JcAudio> jcAudios = new ArrayList<>();
+
+
+
+    private ArrayList<ModelGroupPlaylist> groupPlaylist;
+    private AdapterGroupPlaylist adapterGroupPlaylist;
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) 
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_playlist);
 
-        currentGroupName = getIntent().getExtras().get("groupName").toString();
-        Toast.makeText(GroupPlaylistActivity.this, currentGroupName, Toast.LENGTH_SHORT).show();
 
-        mAuth = FirebaseAuth.getInstance();
-        currentUserID = mAuth.getCurrentUser().getUid();
-        UserRef = FirebaseDatabase.getInstance().getReference().child("User");
-        GroupNameRef = FirebaseDatabase.getInstance().getReference().child("Groups").child(currentGroupName);
-        
-        InitializeFields();
-        
-        GetUserInfo();
 
-        SendMessageButton.setOnClickListener(new View.OnClickListener() {
+        groupTitle = (TextView) findViewById(R.id.groupTitle);
+        addSong = (ImageButton) findViewById(R.id.add_music_button);
+        mToolbar = findViewById(R.id.groupPlaylistToolbar);
+        listView = (ListView) findViewById(R.id.playlistsongs);
+
+        addSong.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view)
-            {
-                SaveMessageInfoToDatabase();
-
-                UserMessageInput.setText("");
-
-                mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
-
+            public void onClick(View view) {
+                openSongList();
             }
         });
-    }
 
-
-    @Override
-    protected void onStart()
-    {
-        super.onStart();
-
-        GroupNameRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s)
-            {
-                if (dataSnapshot.exists())
-                {
-                    DisplayMessages(dataSnapshot);
-                }
-
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) 
-            {
-                if (dataSnapshot.exists())
-                {
-                    DisplayMessages(dataSnapshot);
-                }
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void InitializeFields()
-    {
-        mToolbar = (Toolbar) findViewById(R.id.group_playlist_bar_layout);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle(currentGroupName);
 
-        SendMessageButton = (ImageButton) findViewById(R.id.send_message_button);
-        UserMessageInput = (EditText) findViewById(R.id.input_song_name);
-        displayTextMessages = (TextView) findViewById(R.id.group_playlist_text_display);
-        mScrollView = (ScrollView) findViewById(R.id.my_scroll_view);
+        
+        //get Id of the group
+        Intent intent = getIntent();
+        groupId = intent.getStringExtra("groupId");
+
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        loadGroupInfo();
+        LoadMyGroupRole();
+        retrievePlaylist();
+
+        
+
+
+
     }
 
-    private void GetUserInfo()
-    {
-        UserRef.child(currentUserID).addValueEventListener(new ValueEventListener() {
+    private void retrievePlaylist() {
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("GroupPlaylist");
+        databaseReference.child(groupId).child("Songs")
+                .addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
-            {
-                if (dataSnapshot.exists())
-                {
-                    currentUserName = dataSnapshot.child("name").getValue().toString();
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds :dataSnapshot.getChildren()){
+
+                    Music music = ds.getValue(Music.class);
+                    arrayListSongsName.add(music.getSongName());
+                    arrayListSongsUrl.add(music.getSongLink());
                 }
+
+                arrayAdapter = new ArrayAdapter<String>(GroupPlaylistActivity.this, android.R.layout.simple_list_item_1, arrayListSongsName);
+                listView.setAdapter(arrayAdapter);
 
             }
 
@@ -152,93 +124,69 @@ public class GroupPlaylistActivity extends AppCompatActivity
         });
     }
 
-    private void SaveMessageInfoToDatabase()
-    {
-       String message = UserMessageInput.getText().toString();
-       String messageKey = GroupNameRef.push().getKey();
 
-       if (TextUtils.isEmpty(message))
-       {
-           Toast.makeText(this, "Please enter song first..", Toast.LENGTH_SHORT).show();
-       }
-       else
-       {
-           Calendar calForDate = Calendar.getInstance();
-           SimpleDateFormat currentDateFormat = new SimpleDateFormat("MMM dd, yyyy");
-           currentDate = currentDateFormat.format(calForDate.getTime());
-
-           Calendar calForTime = Calendar.getInstance();
-           SimpleDateFormat currentTimeFormat = new SimpleDateFormat("hh:mm a");
-           currentTime = currentTimeFormat.format(calForTime.getTime());
-
-           HashMap<String, Object> groupPlaylistKey = new HashMap<>();
-           GroupNameRef.updateChildren(groupPlaylistKey);
-
-           GroupMessageKeyRef = GroupNameRef.child(messageKey);
-
-           HashMap<String, Object> messageInfoMap = new HashMap<>();
-               messageInfoMap.put("name", currentUserName);
-               messageInfoMap.put("message", message);
-               messageInfoMap.put("date", currentDate);
-               messageInfoMap.put("time", currentTime);
-            GroupMessageKeyRef.updateChildren(messageInfoMap);
-       }
+    private void openSongList() {
+        Intent songListIntent = new Intent(GroupPlaylistActivity.this, AddSong.class);
+        songListIntent.putExtra("groupId", groupId);
+        startActivity(songListIntent);
     }
 
-    private void DisplayMessages(DataSnapshot dataSnapshot)
-    {
-        Iterator iterator = dataSnapshot.getChildren().iterator();
+    private void LoadMyGroupRole() {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("GroupPlaylists");
+        ref.child(groupId).child("Participants")
+                .orderByChild("uid").equalTo(firebaseAuth.getUid())
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot ds: dataSnapshot.getChildren()){
+                            myGroupRole = ""+ds.child("role").getValue();
+                            //refresh menu items
+                            invalidateOptionsMenu();
+                        }
 
-        while (iterator.hasNext())
-        {
-            String chatDate = (String) ((DataSnapshot)iterator.next()).getValue();
-            String chatMessage = (String) ((DataSnapshot)iterator.next()).getValue();
-            String chatName = (String) ((DataSnapshot)iterator.next()).getValue();
-            String chatTime = (String) ((DataSnapshot)iterator.next()).getValue();
+                    }
 
-            displayTextMessages.append(chatName + " :\n" + chatMessage + "\n" + chatTime + "    " + chatDate + "\n\n\n");
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-            mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
-        }
+                    }
+                });
+    }
+
+    private void loadGroupInfo() {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        super.onCreateOptionsMenu(menu);
-
+    public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.options_menu, menu);
 
-        menu.findItem(R.id.main_settings_option).setVisible(false);
-        menu.findItem(R.id.main_playlist_option).setVisible(false);
-        menu.findItem(R.id.main_find_friends_option).setVisible(false);
-        menu.findItem(R.id.main_logout_option).setVisible(false);
+        menu.findItem(R.id.add_contact).setVisible(false);
 
-        return true;
-    }
-
-    public boolean onOptionsItemSelected(@NonNull MenuItem item)
-    {
-        super.onOptionsItemSelected(item);
-
-        if(item.getItemId() == R.id.add_contact)
-        {
-            mAuth.signOut();
-            SendUserToContactsActivity();
+        if(myGroupRole.equals("creator") || myGroupRole.equals("admin")){
+            menu.findItem(R.id.add_contact).setVisible(true);
+        }
+        else {
+            menu.findItem(R.id.add_contact).setVisible(false);
 
         }
-        return true;
+
+
+        return super.onCreateOptionsMenu(menu);
     }
 
-
-    private void SendUserToContactsActivity()
-    {
-        Intent ContactsIntent = new Intent(GroupPlaylistActivity.this,AddContactsActivity.class);
-        ContactsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(ContactsIntent);
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.add_contact){
+            Intent intent = new Intent (this, ParticipantAddActivity.class);
+            intent.putExtra("groupId", groupId);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
     }
-
-
 
 
 }
+
+
+

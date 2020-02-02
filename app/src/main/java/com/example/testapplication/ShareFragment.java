@@ -10,6 +10,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -24,76 +26,61 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-public class ShareFragment extends Fragment
-{
+public class ShareFragment extends Fragment {
 
-    private View shareFragmentView;
-    private ListView list_view;
-    private ArrayAdapter<String> arrayAdapter;
-    private ArrayList<String> list_of_playlists = new ArrayList<>();
+    private RecyclerView groupPlaylist;
 
-    private DatabaseReference GroupRef;
+    private FirebaseUser mAuth;
 
+    private ArrayList<ModelGroupPlaylist> groupPlaylists;
+    private AdapterGroupPlaylist adapterGroupPlaylist;
 
     public ShareFragment() {
 
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        shareFragmentView = inflater.inflate(R.layout.share_fragment, container, false);
-
-        GroupRef = FirebaseDatabase.getInstance().getReference().child("GroupPlaylists");
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
 
 
-         InitializeFields();
-
-         RetrieveAndDisplayPlaylists();
+        View view = inflater.inflate(R.layout.share_fragment, container, false);
 
 
-         list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-             @Override
-             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id)
-             {
-                String currentGroupTitle = adapterView.getItemAtPosition(position).toString();
+        groupPlaylist = (RecyclerView) view.findViewById(R.id.list_view);
+        groupPlaylist.setHasFixedSize(true);
+        groupPlaylist.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-                Intent groupChatIntent = new Intent(getContext(), GroupPlaylistActivity.class);
-                groupChatIntent.putExtra("groupTitle", currentGroupTitle);
-                startActivity(groupChatIntent);
-             }
-         });
 
-        return shareFragmentView;
+        mAuth = FirebaseAuth.getInstance().getCurrentUser();
+
+        loadPlaylistList();
+
+        return view;
     }
 
+    private void loadPlaylistList() {
+        groupPlaylists = new ArrayList<>();
 
-
-    private void InitializeFields()
-    {
-        list_view = (ListView)shareFragmentView.findViewById(R.id.list_view);
-        arrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, list_of_playlists);
-        list_view.setAdapter(arrayAdapter);
-    }
-
-    private void RetrieveAndDisplayPlaylists()
-    {
-        GroupRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("GroupPlaylists");
+        reference.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
-            {
-                Set<String> set = new HashSet<>();
-                Iterator iterator = dataSnapshot.getChildren().iterator();
-
-                while (iterator.hasNext())
-                {
-                    set.add(((DataSnapshot)iterator.next()).getKey());
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                groupPlaylists.size();
+                for (DataSnapshot ds: dataSnapshot.getChildren()){
+                    if (ds.child("Participants").child(mAuth.getUid()).exists()) {
+                        ModelGroupPlaylist model = ds.getValue(ModelGroupPlaylist.class);
+                        groupPlaylists.add(model);
+                    }
 
                 }
 
-                list_of_playlists.clear();
-                list_of_playlists.addAll(set);
-                arrayAdapter.notifyDataSetChanged();
+                LinearLayoutManager manager = new LinearLayoutManager(getContext());
+                adapterGroupPlaylist = new AdapterGroupPlaylist(getActivity(), groupPlaylists);
+                groupPlaylist.setAdapter(adapterGroupPlaylist);
 
             }
 
@@ -102,8 +89,42 @@ public class ShareFragment extends Fragment
 
             }
         });
-
     }
 
+    /*
 
+    private void searchPlaylistList(final String query) {
+        groupPlaylists = new ArrayList<>();
+
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("GroupPlaylists");
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                groupPlaylists.size();
+                for (DataSnapshot ds: dataSnapshot.getChildren()){
+                    if (ds.child("Participants").child(mAuth.getUid()).exists()) {
+                        if (ds.child("groupTitle").toString().toLowerCase().contains(query.toLowerCase())){
+                            ModelGroupPlaylist model = ds.getValue(ModelGroupPlaylist.class);
+                            groupPlaylists.add(model);
+                        }
+
+                    }
+
+                }
+
+                adapterGroupPlaylist = new AdapterGroupPlaylist(getActivity(), groupPlaylists);
+                groupPlaylist.setAdapter(adapterGroupPlaylist);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }*/
 }
+
+
+
+

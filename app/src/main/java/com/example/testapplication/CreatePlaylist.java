@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -101,7 +102,7 @@ public class CreatePlaylist extends AppCompatActivity {
                         hashMap1.put("role", "creator");
                         hashMap1.put("timestamp", g_timestamp);
 
-                        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("Groups");
+                        DatabaseReference ref1 = FirebaseDatabase.getInstance().getReference("GroupPlaylists");
                         ref1.child(g_timestamp).child("Participants").child(firebaseAuth.getUid())
                                 .setValue(hashMap1)
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -109,6 +110,7 @@ public class CreatePlaylist extends AppCompatActivity {
                                     public void onSuccess(Void aVoid) {
                                         //participant added
                                         progressDialog.dismiss();
+                                        SendUserToMainActivity();
                                         Toast.makeText(CreatePlaylist.this, "Group playlist created", Toast.LENGTH_SHORT).show();
 
                                     }
@@ -132,6 +134,14 @@ public class CreatePlaylist extends AppCompatActivity {
                         Toast.makeText(CreatePlaylist.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void SendUserToMainActivity()
+    {
+        Intent mainIntent = new Intent(CreatePlaylist.this, MainActivity.class);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(mainIntent);
+        finish();
     }
 
 }

@@ -51,88 +51,66 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MeFragment extends Fragment
 {
 
-    private View RequestFragmentView;
-    private RecyclerView myRequestList;
 
-    private String currentUser;
+    private String currentUserID;
+    private FirebaseAuth mAuth;
+    private View user;
 
-    private CircleImageView userProfileImage;
     private TextView userProfileName, userProfileStatus;
 
 
-    private DatabaseReference UserRef, ChatRequestRef, ContactsRef;
-    private FirebaseAuth mAuth;
+    private DatabaseReference rootRef;
 
-    public MeFragment() {
-
-    }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup view, Bundle savedInstanceState) {
+        user = inflater.inflate(layout.activity_me_fragment, view, false);
 
-        RequestFragmentView = inflater.inflate(layout.activity_me_fragment, container,
-                false);
+        userProfileName = (TextView) user.findViewById(R.id.my_profile_name);
+        userProfileStatus = (TextView) user.findViewById(R.id.my_profile_status);
 
-        myRequestList = (RecyclerView) RequestFragmentView.findViewById(R.id.friend_request_list);
-        myRequestList.setLayoutManager(new LinearLayoutManager(getContext()));
-
-
-
+        rootRef = FirebaseDatabase.getInstance().getReference().child("User");;
         mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser().getUid();
-
-        UserRef = FirebaseDatabase.getInstance().getReference().child("User");
-        ContactsRef = FirebaseDatabase.getInstance().getReference().child("Contacts");
+        currentUserID = mAuth.getCurrentUser().getUid();
 
 
-        return RequestFragmentView;
+        CurrentUserInfo();
+        return user;
+
+
     }
 
-
-
-    public static class RequestViewHolder extends RecyclerView.ViewHolder
+    private void CurrentUserInfo()
     {
-        TextView userName, userStatus;
-        CircleImageView profileImage;
-        Button AcceptButton, DeclineButton;
-
-        public RequestViewHolder(@NonNull View itemView)
-        {
-            super(itemView);
-
-            userName = itemView.findViewById(id.user_profile_name);
-            userStatus = itemView.findViewById(id.user_profile_status);
-            profileImage = itemView.findViewById(id.users_profile_image);
-            AcceptButton = itemView.findViewById(id.accept_button);
-            DeclineButton = itemView.findViewById(id.decline_button);
-        }
-    }
-
-    private void CurrentUserInfo() {
-        UserRef.child(currentUser).addValueEventListener(new ValueEventListener() {
+        rootRef.child(currentUserID).addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot)
+            {
                 //if all information has been changed - show all
-                if ((dataSnapshot.exists()) && (dataSnapshot.hasChild("name"))) {
+                if ((dataSnapshot.exists()) && (dataSnapshot.hasChild("name")))
+                {
 
-                    String UserName = dataSnapshot.child("name").getValue().toString();
-                    String Status = dataSnapshot.child("status").getValue().toString();
+                    String retrieveUserName = dataSnapshot.child("name").getValue().toString();
+                    String retrieveStatus = dataSnapshot.child("status").getValue().toString();
 
 
-                    userProfileName.setText(UserName);
-                    userProfileStatus.setText(Status);
-
+                    userProfileName.setText(retrieveUserName);
+                    userProfileStatus.setText(retrieveStatus);
 
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
+            public void onCancelled(DatabaseError databaseError)
+            {
 
             }
         });
 
     }
+
+
+
 }
 
 

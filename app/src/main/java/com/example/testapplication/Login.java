@@ -135,11 +135,8 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
         updateUI(null);
 
     }
-
     private void sendEmailVerification(){
         //Disable button
-
-
         //Send email
         final FirebaseUser user = mAuth.getCurrentUser();
         user.sendEmailVerification()
@@ -162,7 +159,6 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
                     }
                 });
     }
-
     private boolean validateForm() {
         boolean valid = true;
 

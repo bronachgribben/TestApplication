@@ -40,8 +40,6 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference RootRef;
     private FirebaseAuth mAuth;
 
-    private ProgressDialog progressDialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -188,55 +186,6 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
-
-   /* private void RequestNewPlaylist() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialog);
-        builder.setTitle("Enter Playlist Name:");
-
-        final EditText playlistNameField = new EditText(MainActivity.this);
-        playlistNameField.setHint("e.g. Road Trip!");
-        builder.setView(playlistNameField);
-
-        builder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                String playlistName = playlistNameField.getText().toString();
-
-                if (TextUtils.isEmpty(playlistName)) {
-                    Toast.makeText(MainActivity.this, "Please enter name.", Toast.LENGTH_SHORT).show();
-                } else {
-                    CreateNewPlaylist(playlistName);
-
-                }
-
-            }
-        });
-
-
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-
-            }
-        });
-
-        builder.show();
-    }
-
-    private void CreateNewPlaylist(final String playlistName) {
-        RootRef.child("Groups").child(playlistName).setValue("")
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(MainActivity.this, playlistName + "playlist is created successfully", Toast.LENGTH_SHORT).show();
-                        }
-
-                    }
-
-                });
-    }*/
 
 }
 
