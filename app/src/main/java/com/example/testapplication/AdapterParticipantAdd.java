@@ -283,7 +283,7 @@ public class AdapterParticipantAdd extends RecyclerView.Adapter<AdapterParticipa
     }
 
     private void removeAdmin(ModelUser modelUser) {
-        //set data - remove admin - change role 
+        //set data - remove admin - change role
         HashMap<String, Object> hashMap = new HashMap<>();
         hashMap.put("role", "participant");
 

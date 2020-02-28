@@ -59,7 +59,7 @@ public class SearchFragment extends Fragment {
         listView = (ListView) rootView.findViewById(R.id.mySongList);
         jcPlayerView = rootView.findViewById(R.id.jcplayer);
 
-
+//get music from firebase
         music = new Music();
         listView = (ListView) rootView.findViewById(R.id.mySongList);
         database = FirebaseDatabase.getInstance();
@@ -72,6 +72,7 @@ public class SearchFragment extends Fragment {
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     music = ds.getValue(Music.class);
                     list.add(music.getSongName().toString() + "-" + music.getArtist());
+                    //used to play music
                     jcAudios.add(JcAudio.createFromURL(music.getSongName(), music.getSongLink()));
                 }
 
