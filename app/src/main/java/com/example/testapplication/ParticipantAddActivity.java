@@ -99,7 +99,7 @@ public class ParticipantAddActivity extends AppCompatActivity {
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                     if (dataSnapshot.exists()){
                                         myGroupRole = ""+dataSnapshot.child("role").getValue();
-                                        //Toolbar.setTitle(groupTitle + "(" +myGroupRole+ ")");
+                                        //actionBar.setTitle(groupTitle + "(" +myGroupRole+ ")");
 
                                         getAllUsers();
                                     }
