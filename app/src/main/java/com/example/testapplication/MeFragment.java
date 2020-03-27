@@ -79,7 +79,7 @@ public class MeFragment extends Fragment
 
 
     }
-
+//get users information
     private void CurrentUserInfo()
     {
         rootRef.child(currentUserID).addValueEventListener(new ValueEventListener() {
