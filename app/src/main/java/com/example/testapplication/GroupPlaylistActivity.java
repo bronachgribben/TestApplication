@@ -97,7 +97,7 @@ public class GroupPlaylistActivity extends AppCompatActivity {
 
 
     }
-
+//get song list from database
     private void retrievePlaylist() {
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("GroupPlaylist");
@@ -124,13 +124,13 @@ public class GroupPlaylistActivity extends AppCompatActivity {
         });
     }
 
-
+//open song list when button clicked
     private void openSongList() {
         Intent songListIntent = new Intent(GroupPlaylistActivity.this, AddSong.class);
         songListIntent.putExtra("groupId", groupId);
         startActivity(songListIntent);
     }
-
+//user roles listed
     private void LoadMyGroupRole() {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("GroupPlaylists");
         ref.child(groupId).child("Participants")
