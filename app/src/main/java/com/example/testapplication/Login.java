@@ -9,7 +9,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -17,16 +16,22 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.example.testapplication.R;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class Login extends AppCompatActivity implements View.OnClickListener {
 
+
+
     private static final String TAG = "EmailPassword";
 
-    private TextView statusTextView;
-    private TextView detailTextView;
-    private EditText emailField;
-    private EditText passwordField;
+    private FirebaseDatabase mFirebaseDatabase;
+    private DatabaseReference mDatabaseReference;
+
+
+    EditText emailField;
+    EditText passwordField;
+
 
     private FirebaseAuth mAuth;
 
@@ -34,19 +39,20 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mDatabaseReference = mFirebaseDatabase.getReference().child("User");
+
 
 
         //Views
-        statusTextView = findViewById(R.id.statusText);
-        detailTextView = findViewById(R.id.detailText);
+
         emailField = findViewById(R.id.emailText);
         passwordField = findViewById(R.id.passwordText);
 
         //Buttons
         findViewById(R.id.signinBtn).setOnClickListener(this);
         findViewById(R.id.createBtn).setOnClickListener(this);
-        findViewById(R.id.signoutBtn).setOnClickListener(this);
-        findViewById(R.id.verifyBtn).setOnClickListener(this);
+
 
         //Initialise Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -77,6 +83,8 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
                             Log.d(TAG, "createUserWithEmail: success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
+                            saveAccount();
+                            Toast.makeText(Login.this, "Account Saved", Toast.LENGTH_LONG).show();
                         } else {
                             //Sign in fail
                             Log.w(TAG,"createUserWithEmail:failure", task.getException());
@@ -115,7 +123,8 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
                         }
 
                         if (!task.isSuccessful()){
-                            statusTextView.setText(R.string.auth_failed);
+                            Toast.makeText(Login.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -129,7 +138,7 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
 
     private void sendEmailVerification(){
         //Disable button
-        findViewById(R.id.verifyBtn).setEnabled(false);
+
 
         //Send email
         final FirebaseUser user = mAuth.getCurrentUser();
@@ -138,7 +147,7 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         //Re-enable button
-                        findViewById(R.id.verifyBtn).setEnabled(true);
+
 
                         if (task.isSuccessful()){
                             Toast.makeText(Login.this,
@@ -178,26 +187,7 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
 
     private void updateUI(FirebaseUser user) {
         if (user != null) {
-            statusTextView.setText(getString(R.string.emailpassword_status_fmt,
-                    user.getEmail(), user.isEmailVerified()));
-            detailTextView.setText(getString(R.string.firebase_status_fmt, user.getUid()));
 
-            findViewById(R.id.signinBtn).setVisibility(View.GONE);
-            findViewById(R.id.createBtn).setVisibility(View.GONE);
-
-            findViewById(R.id.emailText).setVisibility(View.GONE);
-            findViewById(R.id.passwordText).setVisibility(View.GONE);
-
-            findViewById(R.id.signoutBtn).setVisibility(View.VISIBLE);
-            findViewById(R.id.verifyBtn).setVisibility(View.VISIBLE);
-
-            findViewById(R.id.verifyBtn).setEnabled(!user.isEmailVerified());
-
-        } else {
-
-            statusTextView.setText(R.string.signed_out);
-
-            detailTextView.setText(null);
 
             findViewById(R.id.signinBtn).setVisibility(View.VISIBLE);
             findViewById(R.id.createBtn).setVisibility(View.VISIBLE);
@@ -205,8 +195,7 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
             findViewById(R.id.emailText).setVisibility(View.VISIBLE);
             findViewById(R.id.passwordText).setVisibility(View.VISIBLE);
 
-            findViewById(R.id.signoutBtn).setVisibility(View.GONE);
-            findViewById(R.id.verifyBtn).setVisibility(View.GONE);
+
 
         }
 
@@ -219,11 +208,19 @@ public class Login extends AppCompatActivity implements View.OnClickListener {
             createAccount(emailField.getText().toString(), passwordField.getText().toString());
         } else if (i == R.id.signinBtn){
             signIn(emailField.getText().toString(), passwordField.getText().toString());
-        } else if (i == R.id.signoutBtn){
-            signOut();
-        } else if (i == R.id.verifyBtn){
-            sendEmailVerification();
         }
 
+    }
+
+    private void saveAccount(){
+        String email = emailField.getText().toString();
+        String password = passwordField.getText().toString();
+        LoginDetails details = new LoginDetails(email, password);
+        mDatabaseReference.push().setValue(details);
+    }
+
+    private void clean(){
+        emailField.setText("");
+        passwordField.setText("");
     }
 }

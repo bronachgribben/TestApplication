@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TestApplication</string>
+    <string name="app_name">PIC N MIX</string>
     <string name="signed_out">Signed Out</string>
     <string name="firebase_status_fmt">Firebase UID: %s</string>
     <string name="auth_failed">Authentication failed</string>
